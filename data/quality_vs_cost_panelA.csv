@@ -1,0 +1,19 @@
+panel,model,track,score,pct_of_top_cell,usd_per_1000,cost_basis,gpu_hours_per_1000,outputs_per_hour
+A,Claude Opus 5.5,draft_plus_fixing_pass,4.201,100,318.8000,api_list_price,,191.8
+A,Claude Sonnet 5.5,draft_plus_fixing_pass,4.186,100,165.8000,api_list_price,,240.5
+A,Claude Sonnet 5.5,single_draft,4.024,96,73.2000,api_list_price,,459.6
+A,Claude Haiku 5.5,draft_plus_fixing_pass,3.965,94,11.3000,api_list_price,,193.2
+A,Claude Opus 5.5,single_draft,3.92,93,147.7000,api_list_price,,343.9
+A,Claude Haiku 5.5,single_draft,3.878,92,5.3000,api_list_price,,381.6
+A,Gemma 4 31B,draft_plus_fixing_pass,3.451,82,0.6071,electricity_0.20_per_kWh_incl_assumed_150W_system,4.5186,221.3
+A,Gemma 4 31B,single_draft,3.123,74,0.2799,electricity_0.20_per_kWh_incl_assumed_150W_system,2.0833,480.0
+A,Qwen3.8-27B,draft_plus_fixing_pass,3.121,74,0.4138,electricity_0.20_per_kWh_incl_assumed_150W_system,3.3406,299.3
+A,Muse-Glimmer-30B,draft_plus_fixing_pass,2.997,71,1.6083,electricity_0.20_per_kWh_incl_assumed_150W_system,11.1532,89.7
+A,Qwen3.6-35B-A3B,draft_plus_fixing_pass,2.943,70,0.3325,electricity_0.20_per_kWh_incl_assumed_150W_system,2.9463,339.4
+A,Qwen3.8-27B,single_draft,2.919,69,0.2016,electricity_0.20_per_kWh_incl_assumed_150W_system,1.6278,614.3
+A,Qwen3.6-35B-A3B,single_draft,2.761,66,0.1213,electricity_0.20_per_kWh_incl_assumed_150W_system,1.0750,930.2
+A,Muse-Glimmer-30B,single_draft,2.532,60,0.5968,electricity_0.20_per_kWh_incl_assumed_150W_system,4.1389,241.6
+A,Nemotron-3-nano 30B-A3B,draft_plus_fixing_pass,2.384,57,0.2228,electricity_0.20_per_kWh_incl_assumed_150W_system,1.7229,580.4
+A,Nemotron-3-nano 30B-A3B,single_draft,2.284,54,0.0931,electricity_0.20_per_kWh_incl_assumed_150W_system,0.7194,1390.0
+A,Devstral-Small-2 24B,draft_plus_fixing_pass,2.142,51,0.4095,electricity_0.20_per_kWh_incl_assumed_150W_system,2.8765,347.6
+A,Devstral-Small-2 24B,single_draft,1.981,47,0.1843,electricity_0.20_per_kWh_incl_assumed_150W_system,1.2944,772.5

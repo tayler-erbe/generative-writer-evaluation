@@ -1,0 +1,8 @@
+model,basis,single_draft_list_usd,with_fixing_pass_list_usd
+Claude Haiku 5.5,measured_tokens_x_list_price,5.30,11.30
+Claude Sonnet 5.5,measured_tokens_x_list_price,73.20,165.80
+Claude Opus 5.5,measured_tokens_x_list_price,147.70,318.80
+Claude Fable 5.2,measured_tokens_x_list_price,278.37,
+gpt-5.4-nano,ESTIMATE_quote_token_basis_quality_not_measured_at_full_prompt,3.38,8.54
+gpt-5.4-mini,ESTIMATE_quote_token_basis_quality_not_measured_at_full_prompt,12.60,31.76
+gpt-6.1-terra,ESTIMATE_quote_token_basis_quality_not_measured_at_full_prompt,17.55,43.88

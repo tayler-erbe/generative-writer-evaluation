@@ -1,0 +1,59 @@
+/* Additions for Lab study briefs. Built on styles.css and site.css from the Applied AI Lab; same tokens, fonts and spacing. */
+.site-header{top:env(safe-area-inset-top,0px)}
+.hero-panel h2{margin-bottom:18px}
+.hero-panel ul{list-style:none;padding:0;margin:0 0 18px;border-top:1px solid rgba(255,255,255,.18)}
+.hero-panel li{display:flex;justify-content:space-between;gap:16px;padding:10px 0;border-bottom:1px solid rgba(255,255,255,.18);font-size:13px}
+.hero-panel li b{font-weight:600;white-space:nowrap}
+
+.bars{margin:34px 0 0;border-top:1px solid var(--line)}
+.bars h3{font:700 17px var(--display);margin:22px 0 4px}
+.bars .bars-note{font-size:13px;color:var(--muted);margin:0 0 14px}
+.bar{display:grid;grid-template-columns:minmax(150px,240px) 1fr 84px;gap:14px;align-items:center;padding:7px 0;font-size:14px}
+.bar-name small{display:block;font-size:12px;color:var(--muted)}
+.bar-track{height:14px;background:#e8ebe5;position:relative}
+.bar-fill{position:absolute;inset:0 auto 0 0;background:var(--teal)}
+.bar-fill.win{background:var(--ink)}
+.bar-fill.warn{background:var(--amber)}
+.bar-val{font:600 14px var(--display);text-align:right;white-space:nowrap}
+
+.data-table{width:100%;border-collapse:collapse;border-top:1px solid var(--line);margin-top:20px;font-size:14px}
+.data-table th{text-align:left;font:600 11px var(--body);letter-spacing:1px;text-transform:uppercase;color:var(--muted);padding:14px 12px 12px 0}
+.data-table td{border-bottom:1px solid var(--line);padding:12px 12px 12px 0;vertical-align:top}
+.data-table td.n,.data-table th.n{text-align:right;font-variant-numeric:tabular-nums}
+.data-table tr.hl td{font-weight:600}
+.table-wrap{max-width:100%;overflow-x:auto}
+
+.finding-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:22px;margin-top:36px}
+.finding-grid article{border-top:3px solid var(--ink);background:var(--white);padding:22px}
+.finding-grid article span{font-size:11px;letter-spacing:1.2px;color:var(--teal)}
+.finding-grid h3{font:700 19px/1.3 var(--display);margin:8px 0}
+.finding-grid p{font-size:14px;color:var(--muted);margin:0}
+
+.limit-list{list-style:none;padding:0;margin:30px 0 0;border-top:1px solid var(--line)}
+.limit-list li{padding:14px 0 14px 22px;border-bottom:1px solid var(--line);position:relative;font-size:15px}
+.limit-list li::before{content:"";position:absolute;left:0;top:23px;width:8px;height:8px;background:var(--amber)}
+.status-note{border-left:3px solid var(--amber);padding:4px 0 4px 18px;margin:30px 0 0;font-size:14px}
+
+@media(max-width:1100px){.finding-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media(max-width:800px){.finding-grid{grid-template-columns:1fr}.bar{grid-template-columns:1fr 70px}.bar-name{grid-column:1 / -1}}
+
+/* Generative writer evaluation: figures, formula, estimate label, table titles */
+.chart{margin:36px 0 0;background:var(--white);border:1px solid var(--line);padding:18px}
+.chart img{display:block;width:100%;height:auto;max-width:100%}
+.chart figcaption{font-size:13px;color:var(--muted);margin-top:12px;line-height:1.6}
+.chart-pair{display:grid;grid-template-columns:1.4fr 1fr;gap:22px;align-items:start}
+.table-title{font:700 17px var(--display);letter-spacing:-.3px;margin:44px 0 0}
+.table-note{font-size:13px;color:var(--muted);margin:12px 0 0}
+.data-table.decision td:first-child{font-weight:600;min-width:160px}
+.data-table{min-width:560px}
+.formula{background:var(--white);border-top:3px solid var(--ink);padding:22px 24px;margin-top:36px;font-size:14px}
+.formula p{margin:0 0 10px}
+.formula ul{margin:6px 0 0;padding-left:18px;color:var(--muted)}
+.formula li{margin:6px 0}
+.formula code{font:13px/1.5 ui-monospace,SFMono-Regular,Consolas,monospace;background:#eef1ea;padding:1px 5px;overflow-wrap:anywhere}
+.estimate-box{border:2px dashed var(--amber);background:#fbf6ef;padding:20px 24px;margin-top:36px;font-size:14px}
+.estimate-box p{margin:0}
+.estimate-tag{font-size:11px;letter-spacing:1.4px;font-weight:700;color:var(--amber);margin-bottom:10px!important}
+.tradeoffs{margin-top:36px}
+#bars details{margin-top:30px}
+@media(max-width:800px){.chart-pair{grid-template-columns:1fr}.chart{padding:10px}.formula,.estimate-box{padding:18px}}

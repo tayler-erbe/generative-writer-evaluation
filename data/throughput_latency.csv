@@ -1,0 +1,11 @@
+model,route_and_concurrency,latency_p50_s,latency_p95_s,outputs_per_hour,outputs_per_hour_basis
+Claude Sonnet 5.5,hosted_3_parallel,23.48,29.04,460,derived_from_latency
+Claude Opus 5.5,hosted_3_parallel,30.48,45.47,344,derived_from_latency
+Claude Haiku 5.5,hosted_3_parallel,26.35,46.37,380,derived_from_latency
+Claude Fable 5.2,hosted_3_parallel,29.73,36.20,362,derived_from_latency
+Nemotron-3-nano 30B-A3B,local_2_parallel_clean_window,3.53,5.46,1392,measured
+Qwen3.6-35B-A3B,local_2_parallel_clean_window,5.01,7.60,930,measured
+Devstral-Small-2 24B,local_2_parallel_clean_window,8.88,10.78,772,measured
+Qwen3.8-27B,local_2_parallel_clean_window,12.86,18.71,614,measured
+Gemma 4 31B,local_2_parallel_clean_window,14.76,18.38,480,measured
+Muse-Glimmer-30B,local_2_parallel_clean_window,27.52,40.46,242,measured

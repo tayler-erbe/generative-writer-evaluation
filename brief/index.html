@@ -1,0 +1,464 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="theme-color" content="#142b36">
+<meta name="description" content="Generative writer evaluation: quality, cost and speed across cloud and local models. Three hosted Claude models and six open-weight models on one RTX 5090, 120 fabricated test cases, an AI judge, a fixing pass and LoRA/QLoRA tuning. A model selection brief by Tayler Erbe, Applied AI Lab.">
+<title>Generative writer evaluation: quality, cost and speed across cloud and local models · Applied AI Lab · Tayler Erbe</title>
+<meta property="og:type" content="website"><meta property="og:title" content="The best local writer reached 82% of the top score, at a fraction of a cent per output."><meta property="og:description" content="Nine writer models, 120 fabricated test cases, one consumer GPU: what a fixing pass and LoRA tuning did for local models, and what each quality level costs. By Tayler Erbe."><meta property="og:url" content="https://tayler-erbe.github.io/generative-writer-evaluation/brief/">
+<link rel="icon" href="favicon.svg" type="image/svg+xml"><link rel="stylesheet" href="styles.css"><link rel="stylesheet" href="site.css"><link rel="stylesheet" href="study.css"></head>
+<body>
+<a href="#main" class="skip">Skip to content</a>
+<header class="site-header">
+<a href="https://tayler-erbe.github.io/document-intelligence-lab/" class="brand" aria-label="Applied AI Lab home"><span class="brand-mark">AI<span>↗</span></span><span>Applied AI<br><strong>Lab</strong></span></a>
+<nav aria-label="Main navigation"><a href="#question">Question</a><a href="#quality">Quality</a><a href="#improve">Improving local</a><a href="#cost">Cost</a><a href="#speed">Speed</a><a href="#choose">Choosing</a><a href="#limits">Limits</a></nav>
+<a class="repo-link" href="https://github.com/tayler-erbe/generative-writer-evaluation">Code and data <span aria-hidden="true">↗</span></a>
+</header>
+<main id="main">
+
+<section class="hero">
+<div class="hero-copy">
+<p class="eyebrow">TAYLER ERBE / MODEL SELECTION · TEXT GENERATION</p>
+<h1>The best local writer reached 82% of the top score, <em>at a fraction of a cent per output.</em></h1>
+<p class="hero-deck">A writing task needed a model that turns a set of structured facts and a reader's goal into a short, personalised advisory note: about 150 words, one title, one paragraph, one concrete closing action. I compared hosted and local models on quality, cost and speed, and tested how far prompting, a fixing pass and LoRA tuning could lift the local ones.</p>
+<p class="answer-line"><b>Short version:</b> the three hosted Claude models led and overlapped one another. The best local model (Gemma 4 31B with a fixing pass) scored 3.45 against 4.20 for the top hosted setup, for $0.61 per 1,000 outputs in electricity. The fixing pass helped every model; LoRA tuning taught the output rules but did not raise quality. Scores come from an AI judge that has not yet been checked against human picks.</p>
+<div class="hero-actions">
+<a href="#quality" class="button primary">See the results <span aria-hidden="true">↓</span></a>
+<a href="#limits" class="text-link">What it does not show ↓</a>
+<a href="#choose" class="text-link">Which model when ↓</a>
+</div>
+<p class="author-line"><span><b>Tayler Erbe</b> · Data and AI engineer · model evaluation and inference performance. <a href="#about">About</a></span></p>
+</div>
+<div class="hero-figure">
+<div class="figure-top"><span>CHEAPEST SETUP PER QUALITY BAR · PANEL A</span></div>
+<div class="hero-panel">
+<h2>Pick the bar,<br>then the model.</h2>
+<ul>
+<li><span>3.0 · Qwen3.8-27B, shorter prompt</span><b>$0.09 / 1,000</b></li>
+<li><span>3.3 · Gemma 4 31B + fixing pass</span><b>$0.61 / 1,000</b></li>
+<li><span>3.5 to 3.7 · Claude Haiku 5.5</span><b>$5.30 / 1,000</b></li>
+<li><span>4.0 · Claude Sonnet 5.5</span><b>$73.20 / 1,000</b></li>
+<li><span>4.2 · Claude Opus 5.5 + fixing pass</span><b>$318.80 / 1,000</b></li>
+</ul>
+<p>Scores on a 1 to 5 scale from an AI judge. Local costs are electricity at $0.20 per kWh; hosted costs are API list prices. No local setup reached 3.5.</p>
+<a class="figure-source" href="#bars">How the bars were set <span>↓</span></a>
+</div>
+</div>
+</section>
+
+<section class="stat-strip" aria-label="Key facts">
+<div><strong>120</strong><span>fabricated test cases, sealed by hash before any model ran</span></div>
+<div><strong>9</strong><span>writer models in the headline panel: 3 hosted, 6 local</span></div>
+<div><strong>6</strong><span>rubric dimensions, scored 1 to 5 by an AI judge</span></div>
+<div><strong>1</strong><span>consumer GPU (RTX 5090) for every local model</span></div>
+</section>
+
+<section class="section wrap" id="question">
+<div class="section-head">
+<p class="eyebrow">00 / THE QUESTION</p>
+<h2>Which writer,<br>at what cost?</h2>
+<p>Hosted models are strong and paid per token. Local models are nearly free to run and keep every input on the machine, but are they good enough? And can prompting, a second pass or fine-tuning close the gap?</p>
+</div>
+<div class="results-band">
+<article><p class="route-id">THE TASK</p><h3>A short advisory note</h3><p>From structured facts and a reader's goal, write about 150 words: one title, one paragraph, one concrete closing action. 120 fabricated cases across eleven scenario categories. Every model got the same long prompt (about 14,000 tokens); local models were also run on a shorter one (about 4,000 tokens).</p></article>
+<article><p class="route-id">TWO TRACKS</p><h3>Draft, or draft and fix</h3><p><b>Single draft:</b> one call. <b>Draft + fixing pass:</b> the same model checks its draft against the supplied facts and rewrites it, at most two rounds, and the rewrite is kept only if the number of faults falls.</p></article>
+<article><p class="route-id">THE JUDGE</p><h3>An AI reviewer, blind</h3><p>Claude Sonnet scored each note 1 to 5 on six dimensions: task fit, faithfulness to the supplied facts, insight, specificity, fluency and epistemic care. Sets mixed models, label order was shuffled, and planted control notes (shuffled, from another case, duplicated) checked the judge.</p></article>
+</div>
+<p class="status-note"><strong>These are AI-judge scores, not measured accuracy.</strong> The headline judge passed the planted-control check. A second, local judge failed it (it rewarded scrambled text) and is not used for any number here. Anchoring the judge to 50 blind human picks is <b>pending</b>. Failed or hard-failed outputs score 1 on every dimension (intention to treat). Intervals are 95% case-cluster bootstrap.</p>
+</section>
+
+<section class="section wrap" id="quality" style="padding-top:0">
+<div class="section-head">
+<p class="eyebrow">01 / QUALITY · PANEL A</p>
+<h2>Hosted led,<br>and overlapped.</h2>
+<p>Panel A is the headline run: full prompt, all 120 cases, both tracks. Hosted models had one draw per case, local models two, so their intervals are not the same kind of evidence.</p>
+</div>
+<div class="bars" role="figure" aria-label="Panel A score with the fixing pass, per model">
+<h3>Score with the fixing pass, full prompt (Panel A)</h3>
+<p class="bars-note">AI judge (Claude Sonnet), 1 to 5 scale. Each model's best Panel A setup.</p>
+<div class="bar"><span class="bar-name">Claude Opus 5.5<small>hosted</small></span><span class="bar-track"><span class="bar-fill win" style="width:84%"></span></span><span class="bar-val">4.20</span></div>
+<div class="bar"><span class="bar-name">Claude Sonnet 5.5<small>hosted</small></span><span class="bar-track"><span class="bar-fill win" style="width:83.8%"></span></span><span class="bar-val">4.19</span></div>
+<div class="bar"><span class="bar-name">Claude Haiku 5.5<small>hosted</small></span><span class="bar-track"><span class="bar-fill win" style="width:79.2%"></span></span><span class="bar-val">3.96</span></div>
+<div class="bar"><span class="bar-name">Gemma 4 31B<small>local GPU</small></span><span class="bar-track"><span class="bar-fill" style="width:69%"></span></span><span class="bar-val">3.45</span></div>
+<div class="bar"><span class="bar-name">Qwen3.8-27B<small>local GPU</small></span><span class="bar-track"><span class="bar-fill" style="width:62.4%"></span></span><span class="bar-val">3.12</span></div>
+<div class="bar"><span class="bar-name">Muse-Glimmer-30B<small>local GPU</small></span><span class="bar-track"><span class="bar-fill" style="width:60%"></span></span><span class="bar-val">3.00</span></div>
+<div class="bar"><span class="bar-name">Qwen3.6-35B-A3B<small>local GPU</small></span><span class="bar-track"><span class="bar-fill" style="width:58.8%"></span></span><span class="bar-val">2.94</span></div>
+<div class="bar"><span class="bar-name">Nemotron-3-nano 30B-A3B<small>local GPU</small></span><span class="bar-track"><span class="bar-fill warn" style="width:47.6%"></span></span><span class="bar-val">2.38</span></div>
+<div class="bar"><span class="bar-name">Devstral-Small-2 24B<small>local GPU</small></span><span class="bar-track"><span class="bar-fill warn" style="width:42.8%"></span></span><span class="bar-val">2.14</span></div>
+</div>
+<div class="table-wrap">
+<table class="data-table">
+<caption class="sr-only">Panel A scores by model, full prompt, with 95% intervals and hard-fail rates</caption>
+<thead><tr><th>Model (Panel A, full prompt)</th><th>Route</th><th class="n">Draws per case</th><th class="n">Single draft</th><th class="n">95%</th><th class="n">Draft + fixing pass</th><th class="n">95%</th><th class="n">Hard-fail, single</th><th class="n">Hard-fail, with pass</th></tr></thead>
+<tbody>
+<tr class="hl"><td>Claude Opus 5.5</td><td>hosted</td><td class="n">1</td><td class="n">3.92</td><td class="n">[3.73, 4.09]</td><td class="n">4.20</td><td class="n">[4.09, 4.30]</td><td class="n">0.100</td><td class="n">0.025</td></tr>
+<tr class="hl"><td>Claude Sonnet 5.5</td><td>hosted</td><td class="n">1</td><td class="n">4.02</td><td class="n">[3.85, 4.18]</td><td class="n">4.19</td><td class="n">[4.06, 4.29]</td><td class="n">0.075</td><td class="n">0.033</td></tr>
+<tr><td>Claude Haiku 5.5</td><td>hosted</td><td class="n">1</td><td class="n">3.88</td><td class="n">[3.73, 4.02]</td><td class="n">3.96</td><td class="n">[3.83, 4.08]</td><td class="n">0.067</td><td class="n">0.042</td></tr>
+<tr><td>Gemma 4 31B</td><td>local GPU</td><td class="n">2</td><td class="n">3.12</td><td class="n">[2.99, 3.25]</td><td class="n">3.45</td><td class="n">[3.38, 3.52]</td><td class="n">0.158</td><td class="n">0.029</td></tr>
+<tr><td>Qwen3.8-27B</td><td>local GPU</td><td class="n">2</td><td class="n">2.92</td><td class="n">[2.78, 3.05]</td><td class="n">3.12</td><td class="n">[3.02, 3.22]</td><td class="n">0.179</td><td class="n">0.113</td></tr>
+<tr><td>Muse-Glimmer-30B</td><td>local GPU</td><td class="n">2</td><td class="n">2.53</td><td class="n">[2.34, 2.72]</td><td class="n">3.00</td><td class="n">[2.84, 3.15]</td><td class="n">0.425</td><td class="n">0.246</td></tr>
+<tr><td>Qwen3.6-35B-A3B</td><td>local GPU</td><td class="n">2</td><td class="n">2.76</td><td class="n">[2.62, 2.89]</td><td class="n">2.94</td><td class="n">[2.81, 3.06]</td><td class="n">0.208</td><td class="n">0.133</td></tr>
+<tr><td>Nemotron-3-nano 30B-A3B</td><td>local GPU</td><td class="n">2</td><td class="n">2.28</td><td class="n">[2.16, 2.40]</td><td class="n">2.38</td><td class="n">[2.27, 2.50]</td><td class="n">0.258</td><td class="n">0.188</td></tr>
+<tr><td>Devstral-Small-2 24B</td><td>local GPU</td><td class="n">2</td><td class="n">1.98</td><td class="n">[1.82, 2.14]</td><td class="n">2.14</td><td class="n">[1.97, 2.30]</td><td class="n">0.537</td><td class="n">0.458</td></tr>
+</tbody></table>
+</div>
+<div class="finding-grid">
+<article><span>FINDING 01</span><h3>The hosted three overlap</h3><p>Claude Sonnet, Opus and Haiku have overlapping intervals. With the fixing pass, Opus (4.20) and Sonnet (4.19) are level.</p></article>
+<article><span>FINDING 02</span><h3>The local gap is real</h3><p>The best local cell (Gemma 4 31B with the fixing pass, 3.45) is 0.75 below the best hosted cell (4.20) and 0.57 below the best hosted single draft (4.02).</p></article>
+<article><span>FINDING 03</span><h3>The pass rescues, mostly</h3><p>The fixing pass raised every model and cut hard failures sharply (Gemma 0.158 to 0.029). Among outputs that were already valid, scores barely moved: it mainly rescued outputs that had broken a rule.</p></article>
+</div>
+<p class="status-note"><strong>Other panels are kept separate.</strong> Panel B, an earlier full-prompt re-run in a separate judging session, added Claude Fable 5.2: it was the top Panel B arm at 3.93, and its interval overlaps Sonnet's and Opus's in that panel. Panel C, an earlier shorter-prompt run on 30 cases, added three OpenAI models. The same Claude model scored up to 0.36 differently between Panels A and B on identical cases (different draws and judge pool), so numbers from different panels are never compared on this page.</p>
+</section>
+
+<section class="use-section" id="improve">
+<div class="wrap">
+<div class="use-layout">
+<h2>Making local models better.</h2>
+<div><p class="large-copy">Four levers were tried on the local models: prompt length, the fixing pass, extra pipeline steps, and LoRA or QLoRA tuning. The fixing pass was the only one that lifted every model.</p>
+<p>All changes below are paired by case, with 95% intervals. Each table states its panel.</p></div>
+</div>
+<figure class="chart">
+<img src="charts/before_after_ladder_panelA.svg" alt="For each local model, three points: shorter prompt single draft, full prompt single draft, and full prompt with the fixing pass, with the best hosted single draft (4.02) and best hosted fixed cell (4.20) as reference lines." loading="lazy" width="900" height="598">
+<figcaption>Panel A: each local model on the shorter prompt, the full prompt, and the full prompt with the fixing pass. Reference lines are the best hosted single draft (4.02) and the best hosted cell with the fixing pass (4.20).</figcaption>
+</figure>
+<h3 class="table-title">Prompt length and the fixing pass (Panel A)</h3>
+<div class="table-wrap">
+<table class="data-table">
+<caption class="sr-only">Panel A local models: shorter prompt score, effect of the long prompt, effect of the fixing pass, and score on valid outputs only</caption>
+<thead><tr><th>Model</th><th class="n">Shorter prompt, single draft</th><th class="n">Long minus short prompt (single draft)</th><th class="n">Fixing pass change (full prompt)</th><th class="n">Valid outputs only: single / with pass</th></tr></thead>
+<tbody>
+<tr><td>Gemma 4 31B</td><td class="n">3.09</td><td class="n">+0.03 [-0.12, 0.18]</td><td class="n">+0.33 [0.22, 0.44]</td><td class="n">3.52 / 3.52</td></tr>
+<tr><td>Qwen3.8-27B</td><td class="n">3.10</td><td class="n">-0.18 [-0.34, -0.02]</td><td class="n">+0.20 [0.12, 0.29]</td><td class="n">3.34 / 3.39</td></tr>
+<tr><td>Qwen3.6-35B-A3B</td><td class="n">2.79</td><td class="n">-0.03 [-0.18, 0.12]</td><td class="n">+0.18 [0.10, 0.27]</td><td class="n">3.24 / 3.25</td></tr>
+<tr><td>Muse-Glimmer-30B</td><td class="n">3.10</td><td class="n">-0.56 [-0.79, -0.35]</td><td class="n">+0.47 [0.34, 0.60]</td><td class="n">3.70 / 3.68</td></tr>
+<tr><td>Nemotron-3-nano 30B-A3B</td><td class="n">2.42</td><td class="n">-0.14 [-0.29, 0.01]</td><td class="n">+0.10 [0.05, 0.16]</td><td class="n">2.80 / 2.77</td></tr>
+<tr><td>Devstral-Small-2 24B</td><td class="n">2.54</td><td class="n">-0.56 [-0.76, -0.35]</td><td class="n">+0.16 [0.10, 0.23]</td><td class="n">3.12 / 3.11</td></tr>
+<tr><td>Claude Sonnet 5.5 (full prompt only)</td><td class="n">n/a</td><td class="n">n/a</td><td class="n">+0.16 [0.06, 0.29]</td><td class="n">4.27 / 4.30</td></tr>
+<tr><td>Claude Opus 5.5 (full prompt only)</td><td class="n">n/a</td><td class="n">n/a</td><td class="n">+0.28 [0.13, 0.45]</td><td class="n">4.25 / 4.28</td></tr>
+<tr><td>Claude Haiku 5.5 (full prompt only)</td><td class="n">n/a</td><td class="n">n/a</td><td class="n">+0.09 [0.01, 0.19]</td><td class="n">4.08 / 4.09</td></tr>
+</tbody></table>
+</div>
+<div class="next-footer"><p><strong>What the long prompt did.</strong> It hurt Muse-Glimmer (-0.56), Devstral (-0.56) and Qwen3.8 (-0.18) on single drafts, and helped Gemma only together with the fixing pass. Local hard-fail rates roughly doubled on the long prompt. Hosted models followed the long prompt (hard-fail 6.7 to 10%).</p></div>
+
+<h3 class="table-title">Other pipeline steps, one local model (Qwen3.8-27B, 71-case secondary set, Panel D)</h3>
+<div class="table-wrap">
+<table class="data-table">
+<caption class="sr-only">Panel D: paired effect of extra pipeline steps on Qwen3.8-27B</caption>
+<thead><tr><th>Step</th><th class="n">Paired change (95%)</th><th>What it did</th></tr></thead>
+<tbody>
+<tr><td>Plan first (write a plan, then the text)</td><td class="n">-0.168 [-0.273, -0.058]</td><td>Worse on this rubric</td></tr>
+<tr><td>Strict rule in the prompt against stating feelings as fact</td><td class="n">+0.048 [0.005, 0.093]</td><td>That fault fell from 76% to about 37% of outputs</td></tr>
+<tr><td>Best of 4, picked by a local selector</td><td class="n">+0.034 [-0.007, 0.079]</td><td>Inside noise, at four times the writing cost</td></tr>
+<tr><td>Check-and-rewrite repair</td><td class="n">-0.006 [-0.012, -0.001]</td><td>Cut the fault where it fired; score unchanged</td></tr>
+</tbody></table>
+</div>
+<p class="table-note">Every pipeline step together moved the score by about +0.04. None closed the gap to the stronger models.</p>
+</div>
+</section>
+
+<section class="section wrap" id="tuning">
+<div class="section-head">
+<p class="eyebrow">02 / LORA AND QLORA TUNING · PANELS D AND E</p>
+<h2>Tuning taught rules,<br>not quality.</h2>
+<p>Every round was measured. Tuned models were not served live, and each setting is a single run.</p>
+</div>
+<div class="table-wrap">
+<table class="data-table">
+<caption class="sr-only">Every LoRA and QLoRA tuning round, its training data, result and verdict</caption>
+<thead><tr><th>Round</th><th>Training data</th><th>Result (paired change; 95% where measured)</th><th>Verdict</th></tr></thead>
+<tbody>
+<tr><td>Self-distillation, round 1</td><td>The model's own best outputs (144, picked by a judge with grade ≥ 4.0), QLoRA r16</td><td>+0.02 against the untuned base on the 71-case set</td><td>No gain; cut the stated-feelings fault from 79% to 56%</td></tr>
+<tr><td>Self-distillation, round 2</td><td>382 kept outputs, length filter, 730 new fabricated cases</td><td>-0.05 to -0.07 against base (inside the ~0.1 judging noise)</td><td>No gain; the picker agreed with itself on only 47% of its choices</td></tr>
+<tr><td>Small model A, round 1</td><td>61 cleaned outputs of a stronger hosted model</td><td>Outputs failing hard rules: 41 of 71 → 10 of 71. Score +0.23 [-0.00, 0.46] against the shorter-prompt base on 120 cases</td><td>Rules learnt; quality not raised (among outputs that passed checks: -0.39 against base)</td></tr>
+<tr><td>Small model A, round 2</td><td>15 / 27 / 55 / 64 cleaned outputs</td><td>Score on 120 cases: 15 → 1.82, 27 → 2.58, 55 → 2.51, 64 → 2.52. Round 2 minus round 1: -0.23 [-0.38, -0.09]</td><td>Flat after 27; stock phrases 68% → 24%, over-hedging 44% → 8%, score did not rise</td></tr>
+<tr><td>Small model B</td><td>96 cleaned outputs</td><td>Tuned minus untuned single draft: -0.34 [-0.51, -0.16]. Untuned + fixing pass beat tuned by +0.61</td><td>Tuning lost; untuned model plus fixing pass chosen</td></tr>
+</tbody></table>
+</div>
+<div class="chart-pair">
+<figure class="chart">
+<img src="charts/public_tuning_gains.svg" alt="Horizontal bars of score change from each tuning round: +0.02, -0.05, +0.23, -0.23, -0.34, and +0.61 for an untuned model with the fixing pass against the tuned one." loading="lazy" width="1000" height="224">
+<figcaption>What tuning added to the score (paired changes). Orange is tuning; green is an untuned model with the fixing pass, for scale. Differences under about 0.1 are inside judging noise.</figcaption>
+</figure>
+<figure class="chart">
+<img src="charts/lora_learning_curve.svg" alt="Score on 120 cases against the number of cleaned training examples for small model A: 1.82 at 15, 2.58 at 27, 2.51 at 55, 2.52 at 64, with a hosted reference line above." loading="lazy" width="640" height="420">
+<figcaption>Learning curve for small model A (Muse-Glimmer-30B): score against the number of training examples. One run per size; the jump from 15 to 27 is rule-learning, and 27 to 64 is flat.</figcaption>
+</figure>
+</div>
+<div class="finding-grid">
+<article><span>WHAT IT DID</span><h3>Taught the rules</h3><p>Tuning taught the output rules (the largest single movement in the study), removed specific habits it was shown, and removed the need for in-prompt examples. Serving an adapter cost about 14% throughput.</p></article>
+<article><span>WHAT IT DID NOT</span><h3>Raise blind quality</h3><p>It did not raise quality beyond what a good prompt plus the fixing pass give. No tuned model came within 0.9 of the best hosted model.</p></article>
+<article><span>WHY (SUPPORTED)</span><h3>Too little, too noisy</h3><p>47 to 96 usable examples is small, and the curve is flat from 27 to 64. The hosted-written examples contained the forbidden stock phrases (44 of 61), and cleaning them did not help. Self-picked data converges on the model's own style, because the picker is noisy (grade correlation 0.33 between two passes).</p></article>
+</div>
+<h3 class="table-title">Where the local gap comes from (Panel A, full prompt, single draft)</h3>
+<div class="table-wrap">
+<table class="data-table">
+<caption class="sr-only">Gap decomposition: rule-failure part and quality part</caption>
+<thead><tr><th>Model</th><th class="n">Rule-failure part (valid-only minus all-outputs score)</th><th class="n">Quality part (below Sonnet's 4.27 on valid outputs)</th></tr></thead>
+<tbody>
+<tr><td>Gemma 4 31B</td><td class="n">+0.40</td><td class="n">0.75</td></tr>
+<tr><td>Qwen3.8-27B</td><td class="n">+0.42</td><td class="n">0.93</td></tr>
+<tr><td>Muse-Glimmer-30B</td><td class="n">+1.17</td><td class="n">0.57</td></tr>
+</tbody></table>
+</div>
+<p class="table-note">Tuning attacked the first part and did not move the second.</p>
+<div class="estimate-box">
+<p class="estimate-tag">ESTIMATE · NOT A MEASUREMENT</p>
+<p><strong>What more data might do.</strong> With more of the same data, expect roughly zero gain in score (flat curve, two flat rounds). With several hundred to a few thousand examples written or edited to the target standard by a stronger source, a clean picker and a preference stage (none of which were tested here), a plausible planning range is to recover the rule-failure part and some of the quality part. That would put a 27 to 31B model near its valid-only level of 3.4 to 3.7 on Panel A's scale, still about 0.4 to 0.9 below the best hosted single draft (4.02). Closing to within 0.3 would need a stronger base model, or better-than-own data at scale, and a fresh test.</p>
+</div>
+</section>
+
+<section class="use-section" id="cost">
+<div class="wrap">
+<div class="use-layout">
+<h2>What it costs.</h2>
+<div><p class="large-copy">For N outputs, cost is N times the cost of one. The hosted price depends on tokens; the local price depends on GPU time and your electricity rate.</p>
+<p>Running the evaluation itself had no per-call cost: hosted arms ran on a subscription (recorded as usage and priced here at API list rates), and local arms ran on the GPU (electricity).</p></div>
+</div>
+<div class="formula">
+<p><code>cost(N) = N × c</code></p>
+<p><b>Hosted API:</b> <code>c = (input tokens × P_in + output tokens × P_out) / 1,000,000</code>, summed over every call (single draft: 1 call; with the fixing pass: 3.3 to 4.0 calls). Batch tier = 0.5 × list.</p>
+<p><b>Local GPU:</b> <code>c = GPU-seconds per output × (P_gpu + P_system) / 3,600,000 × r + GPU-hours × A</code></p>
+<ul>
+<li><code>r</code>: electricity rate in USD per kWh, a parameter. The tables use $0.20; at $0.12 multiply local costs by 0.6, at $0.30 by 1.5.</li>
+<li><code>P_gpu</code>: measured card power under load, 414 to 571 W depending on model (4 to 16 W idle).</li>
+<li><code>P_system</code>: an <b>assumed</b> 150 W for the rest of the machine. Wall power was not measured.</li>
+<li><code>A</code>: optional hardware amortisation per GPU-hour, <code>hardware cost / (years × 8,760 × utilisation)</code>. Use your own figures. As an <b>illustrative</b> example only, $3,000 over 3 years at 50% use is about $0.23 per GPU-hour; the data files carry this illustrative column separately and it is not included in any cost on this page.</li>
+</ul>
+</div>
+<h3 class="table-title">Prices used (USD per million tokens, input / output, standard tier)</h3>
+<div class="table-wrap">
+<table class="data-table">
+<caption class="sr-only">API prices used, with the date they were checked</caption>
+<thead><tr><th>Vendor, date checked</th><th>Model and price</th></tr></thead>
+<tbody>
+<tr><td>Anthropic, 17 Nov 2026</td><td>Haiku 5.5 0.10 / 0.50 · Sonnet 5.5 2 / 10 · Opus 5.5 4 / 20 · Fable 5.2 8 / 40</td></tr>
+<tr><td>OpenAI, 19 Nov 2026</td><td>gpt-5.4-nano 0.20 / 1.25 (marked deprecated by the vendor) · gpt-5.4-mini 0.75 / 4.50 · gpt-6.1-terra 1 / 5 · gpt-6.1-sol 2 / 10 · gpt-6-astra 10 / 50</td></tr>
+</tbody></table>
+</div>
+<p class="table-note">Batch is 50% of list for both vendors. Any price after those dates is unverified.</p>
+
+<h3 class="table-title">Cost per 1,000 outputs (full prompt)</h3>
+<div class="table-wrap">
+<table class="data-table">
+<caption class="sr-only">Cost per 1,000 outputs by model and track</caption>
+<thead><tr><th>Model</th><th>Basis</th><th class="n">Single draft, list</th><th class="n">Single draft, batch</th><th class="n">With fixing pass, list</th></tr></thead>
+<tbody>
+<tr><td>Claude Haiku 5.5</td><td>measured tokens × list price</td><td class="n">$5.30</td><td class="n">$2.65</td><td class="n">$11.30</td></tr>
+<tr><td>Claude Sonnet 5.5</td><td>measured tokens × list price</td><td class="n">$73.20</td><td class="n">$36.60</td><td class="n">$165.80</td></tr>
+<tr><td>Claude Opus 5.5</td><td>measured tokens × list price</td><td class="n">$147.70</td><td class="n">$73.85</td><td class="n">$318.80</td></tr>
+<tr><td>Claude Fable 5.2</td><td>measured tokens × list price</td><td class="n">$278.37</td><td class="n">$139.18</td><td class="n">not run</td></tr>
+<tr><td>gpt-5.4-nano</td><td><b>ESTIMATE</b>: quoted token basis; quality at this prompt not measured</td><td class="n">$3.38</td><td class="n">$1.69</td><td class="n">$8.54</td></tr>
+<tr><td>gpt-5.4-mini</td><td><b>ESTIMATE</b>: quoted token basis; quality at this prompt not measured</td><td class="n">$12.60</td><td class="n">$6.30</td><td class="n">$31.76</td></tr>
+<tr><td>gpt-6.1-terra</td><td><b>ESTIMATE</b>: quoted token basis; quality at this prompt not measured</td><td class="n">$17.55</td><td class="n">$8.78</td><td class="n">$43.88</td></tr>
+<tr><td>Gemma 4 31B</td><td>electricity, $0.20/kWh, incl. assumed system power</td><td class="n">$0.28</td><td class="n">n/a</td><td class="n">$0.61</td></tr>
+<tr><td>Qwen3.8-27B</td><td>electricity, $0.20/kWh, incl. assumed system power</td><td class="n">$0.20</td><td class="n">n/a</td><td class="n">$0.41</td></tr>
+<tr><td>Qwen3.6-35B-A3B</td><td>electricity, $0.20/kWh, incl. assumed system power</td><td class="n">$0.12</td><td class="n">n/a</td><td class="n">$0.33</td></tr>
+<tr><td>Muse-Glimmer-30B</td><td>electricity, $0.20/kWh, incl. assumed system power</td><td class="n">$0.60</td><td class="n">n/a</td><td class="n">$1.61</td></tr>
+<tr><td>Nemotron-3-nano 30B-A3B</td><td>electricity, $0.20/kWh, incl. assumed system power</td><td class="n">$0.09</td><td class="n">n/a</td><td class="n">$0.22</td></tr>
+<tr><td>Devstral-Small-2 24B</td><td>electricity, $0.20/kWh, incl. assumed system power</td><td class="n">$0.18</td><td class="n">n/a</td><td class="n">$0.41</td></tr>
+</tbody></table>
+</div>
+<p class="table-note">Local costs are derived from a clean timing window with one model alone on the card.</p>
+
+<h3 class="table-title">Cost for N outputs</h3>
+<div class="table-wrap">
+<table class="data-table">
+<caption class="sr-only">Cost for 1,000 to 1,000,000 outputs by setup</caption>
+<thead><tr><th>Setup</th><th class="n">1,000</th><th class="n">10,000</th><th class="n">100,000</th><th class="n">1,000,000</th></tr></thead>
+<tbody>
+<tr><td>Claude Haiku 5.5, single draft, API list</td><td class="n">$5.30</td><td class="n">$53.00</td><td class="n">$530</td><td class="n">$5,300</td></tr>
+<tr><td>Claude Haiku 5.5, single draft, API batch</td><td class="n">$2.65</td><td class="n">$26.50</td><td class="n">$265</td><td class="n">$2,650</td></tr>
+<tr><td>Claude Sonnet 5.5, single draft, API list</td><td class="n">$73.20</td><td class="n">$732</td><td class="n">$7,320</td><td class="n">$73,200</td></tr>
+<tr><td>Claude Sonnet 5.5 + fixing pass, API list</td><td class="n">$165.80</td><td class="n">$1,658</td><td class="n">$16,580</td><td class="n">$165,800</td></tr>
+<tr><td>Claude Opus 5.5, single draft, API list</td><td class="n">$147.70</td><td class="n">$1,477</td><td class="n">$14,770</td><td class="n">$147,700</td></tr>
+<tr><td>Claude Opus 5.5 + fixing pass, API list</td><td class="n">$318.80</td><td class="n">$3,188</td><td class="n">$31,880</td><td class="n">$318,800</td></tr>
+<tr><td>Claude Fable 5.2, single draft, API list</td><td class="n">$278.37</td><td class="n">$2,784</td><td class="n">$27,837</td><td class="n">$278,366</td></tr>
+<tr><td>Gemma 4 31B local, single draft (electricity, $0.20)</td><td class="n">$0.28</td><td class="n">$2.80</td><td class="n">$27.99</td><td class="n">$280</td></tr>
+<tr><td>Gemma 4 31B local + fixing pass (electricity, $0.20)</td><td class="n">$0.61</td><td class="n">$6.07</td><td class="n">$60.71</td><td class="n">$607</td></tr>
+<tr><td>Qwen3.8-27B local, single draft (electricity, $0.20)</td><td class="n">$0.20</td><td class="n">$2.02</td><td class="n">$20.16</td><td class="n">$202</td></tr>
+</tbody></table>
+</div>
+<div class="next-footer"><p><strong>The fixing pass multiplies calls by 3.3 to 4.0.</strong> Measured, that raised hosted API cost by about 2.1 to 2.3 times and local GPU time by between 2 and 3 times, depending on the model. Tuning cost in this study was minutes to under an hour of GPU time per training run (about 3.5 GPU-hours per self-distillation round, including data generation and measurement), plus grading usage, with no paid API call. The main cost of tuning is preparing and grading the training data.</p></div>
+<figure class="chart">
+<img src="charts/quality_vs_cost.svg" alt="Scatter of score against cost per 1,000 outputs on a log scale. Hosted Claude models sit top right; local models sit lower left. Hollow points from other panels are shown for orientation only." loading="lazy" width="900" height="560">
+<figcaption>Score against cost per 1,000 outputs (log scale). Filled points are Panel A (full prompt): circles are single drafts, diamonds add the fixing pass. Hollow points come from other panels and are not comparable in level.</figcaption>
+</figure>
+</div>
+</section>
+
+<section class="section wrap" id="bars">
+<div class="section-head">
+<p class="eyebrow">03 / CHEAPEST SETUP PER BAR · PANEL A</p>
+<h2>Set the bar,<br>then pay for it.</h2>
+<p>For each quality bar, the cheapest Panel A setup whose point estimate clears it. Differences of 0.1 are inside judging noise.</p>
+</div>
+<div class="table-wrap">
+<table class="data-table">
+<caption class="sr-only">Cheapest setup that clears each quality bar</caption>
+<thead><tr><th class="n">Bar</th><th>Cheapest setup that clears it</th><th class="n">Score</th><th class="n">Cost per 1,000</th></tr></thead>
+<tbody>
+<tr><td class="n">3.0</td><td>Qwen3.8-27B, shorter prompt, single draft</td><td class="n">3.10</td><td class="n">$0.09</td></tr>
+<tr><td class="n">3.3</td><td>Gemma 4 31B, full prompt, with fixing pass</td><td class="n">3.45</td><td class="n">$0.61</td></tr>
+<tr><td class="n">3.5</td><td>Claude Haiku 5.5, full prompt, single draft</td><td class="n">3.88</td><td class="n">$5.30</td></tr>
+<tr><td class="n">3.7</td><td>Claude Haiku 5.5, full prompt, single draft</td><td class="n">3.88</td><td class="n">$5.30</td></tr>
+<tr><td class="n">4.0</td><td>Claude Sonnet 5.5, full prompt, single draft</td><td class="n">4.02</td><td class="n">$73.20</td></tr>
+<tr><td class="n">4.2</td><td>Claude Opus 5.5, full prompt, with fixing pass</td><td class="n">4.20</td><td class="n">$318.80</td></tr>
+</tbody></table>
+</div>
+<p class="table-note">No local setup reached 3.5. Hosted costs are API list prices; local costs are electricity at $0.20 per kWh.</p>
+<details>
+<summary>Every Panel A setup: score, share of the top cell, cost per 1,000</summary>
+<div class="table-wrap">
+<table class="data-table">
+<caption class="sr-only">All Panel A setups with score, percentage of the top cell and cost per 1,000</caption>
+<thead><tr><th>Setup (full prompt)</th><th class="n">Score</th><th class="n">% of top cell (4.20)</th><th class="n">Cost per 1,000</th></tr></thead>
+<tbody>
+<tr><td>Claude Opus 5.5, with fixing pass</td><td class="n">4.20</td><td class="n">100%</td><td class="n">$318.80</td></tr>
+<tr><td>Claude Sonnet 5.5, with fixing pass</td><td class="n">4.19</td><td class="n">100%</td><td class="n">$165.80</td></tr>
+<tr><td>Claude Sonnet 5.5, single draft</td><td class="n">4.02</td><td class="n">96%</td><td class="n">$73.20</td></tr>
+<tr><td>Claude Haiku 5.5, with fixing pass</td><td class="n">3.96</td><td class="n">94%</td><td class="n">$11.30</td></tr>
+<tr><td>Claude Opus 5.5, single draft</td><td class="n">3.92</td><td class="n">93%</td><td class="n">$147.70</td></tr>
+<tr><td>Claude Haiku 5.5, single draft</td><td class="n">3.88</td><td class="n">92%</td><td class="n">$5.30</td></tr>
+<tr class="hl"><td>Gemma 4 31B, with fixing pass</td><td class="n">3.45</td><td class="n">82%</td><td class="n">$0.61</td></tr>
+<tr><td>Gemma 4 31B, single draft</td><td class="n">3.12</td><td class="n">74%</td><td class="n">$0.28</td></tr>
+<tr><td>Qwen3.8-27B, with fixing pass</td><td class="n">3.12</td><td class="n">74%</td><td class="n">$0.41</td></tr>
+<tr><td>Muse-Glimmer-30B, with fixing pass</td><td class="n">3.00</td><td class="n">71%</td><td class="n">$1.61</td></tr>
+<tr><td>Qwen3.6-35B-A3B, with fixing pass</td><td class="n">2.94</td><td class="n">70%</td><td class="n">$0.33</td></tr>
+<tr><td>Qwen3.8-27B, single draft</td><td class="n">2.92</td><td class="n">69%</td><td class="n">$0.20</td></tr>
+<tr><td>Qwen3.6-35B-A3B, single draft</td><td class="n">2.76</td><td class="n">66%</td><td class="n">$0.12</td></tr>
+<tr><td>Muse-Glimmer-30B, single draft</td><td class="n">2.53</td><td class="n">60%</td><td class="n">$0.60</td></tr>
+<tr><td>Nemotron-3-nano 30B-A3B, with fixing pass</td><td class="n">2.38</td><td class="n">57%</td><td class="n">$0.22</td></tr>
+<tr><td>Nemotron-3-nano 30B-A3B, single draft</td><td class="n">2.28</td><td class="n">54%</td><td class="n">$0.09</td></tr>
+<tr><td>Devstral-Small-2 24B, with fixing pass</td><td class="n">2.14</td><td class="n">51%</td><td class="n">$0.41</td></tr>
+<tr><td>Devstral-Small-2 24B, single draft</td><td class="n">1.98</td><td class="n">47%</td><td class="n">$0.18</td></tr>
+</tbody></table>
+</div>
+</details>
+</section>
+
+<section class="use-section" id="speed">
+<div class="wrap">
+<div class="use-layout">
+<h2>How fast.</h2>
+<div><p class="large-copy">Nemotron-3-nano and Qwen3.6 were the fastest on the card; the two strongest local models, Gemma 4 and Qwen3.8, ran at 480 and 614 outputs an hour. Hosted calls took 23.5 to 30.5 seconds at the median.</p>
+<p>Full prompt, single draft. Hosted latency is dominated by hidden thinking tokens; local latency by the 14,000-token prompt.</p></div>
+</div>
+<div class="table-wrap">
+<table class="data-table">
+<caption class="sr-only">Per-call latency and outputs per hour by model</caption>
+<thead><tr><th>Model</th><th>Route / concurrency</th><th class="n">Latency p50 / p95 (s)</th><th class="n">Outputs per hour</th></tr></thead>
+<tbody>
+<tr><td>Claude Sonnet 5.5</td><td>hosted, 3 parallel</td><td class="n">23.5 / 29.0</td><td class="n">460 (derived)</td></tr>
+<tr><td>Claude Opus 5.5</td><td>hosted, 3 parallel</td><td class="n">30.5 / 45.5</td><td class="n">344 (derived)</td></tr>
+<tr><td>Claude Haiku 5.5</td><td>hosted, 3 parallel</td><td class="n">26.4 / 46.4</td><td class="n">380 (derived)</td></tr>
+<tr><td>Claude Fable 5.2</td><td>hosted, 3 parallel</td><td class="n">29.7 / 36.2</td><td class="n">362 (derived)</td></tr>
+<tr><td>Nemotron-3-nano 30B-A3B</td><td>local, 2 parallel</td><td class="n">3.5 / 5.5</td><td class="n">1,392</td></tr>
+<tr><td>Qwen3.6-35B-A3B</td><td>local, 2 parallel</td><td class="n">5.0 / 7.6</td><td class="n">930</td></tr>
+<tr><td>Devstral-Small-2 24B</td><td>local, 2 parallel</td><td class="n">8.9 / 10.8</td><td class="n">772</td></tr>
+<tr><td>Qwen3.8-27B</td><td>local, 2 parallel</td><td class="n">12.9 / 18.7</td><td class="n">614</td></tr>
+<tr><td>Gemma 4 31B</td><td>local, 2 parallel</td><td class="n">14.8 / 18.4</td><td class="n">480</td></tr>
+<tr><td>Muse-Glimmer-30B</td><td>local, 2 parallel</td><td class="n">27.5 / 40.5</td><td class="n">242</td></tr>
+<tr><td>Qwen3.8-27B</td><td>local, 4 parallel</td><td class="n">n/a</td><td class="n">936</td></tr>
+</tbody></table>
+</div>
+<div class="next-footer"><p><strong>How these were measured.</strong> Local figures come from windows with one model alone on the card. Hosted figures are three calls at a time on a shared subscription, not a rate-limit test; their outputs per hour are derived from latency. Single-request latency was not measured.</p></div>
+<figure class="chart">
+<img src="charts/quality_vs_speed.svg" alt="Scatter of score against outputs per hour. Hosted Claude models score highest at 344 to 460 per hour; local models range from 242 to about 1,400 per hour at lower scores." loading="lazy" width="900" height="560">
+<figcaption>Score against outputs per hour (single draft, full prompt). Throughput is not quality-adjusted; hosted throughput scales with concurrency, which was not measured beyond three.</figcaption>
+</figure>
+</div>
+</section>
+
+<section class="section wrap" id="choose">
+<div class="section-head">
+<p class="eyebrow">04 / CAPABILITIES AND TRADEOFFS</p>
+<h2>Which model,<br>for which job.</h2>
+<p>Quality is one column. Rule-following, privacy and licence terms decide as much.</p>
+</div>
+<h3 class="table-title">Rule-following, measured by code checks (share of outputs)</h3>
+<div class="table-wrap">
+<table class="data-table">
+<caption class="sr-only">Hard-fail rates and rule-following rates by model</caption>
+<thead><tr><th>Model</th><th class="n">Hard-fail, long prompt</th><th class="n">Hard-fail, shorter prompt</th><th class="n">Inside the length band</th><th class="n">Banned sentence shapes</th><th class="n">Stock phrases</th></tr></thead>
+<tbody>
+<tr><td>Claude Sonnet 5.5</td><td class="n">0.075</td><td class="n">not run</td><td class="n">0.98</td><td class="n">0.08</td><td class="n">0.02</td></tr>
+<tr><td>Claude Opus 5.5</td><td class="n">0.100</td><td class="n">not run</td><td class="n">0.62</td><td class="n">0.22</td><td class="n">0.02</td></tr>
+<tr><td>Claude Haiku 5.5</td><td class="n">0.067</td><td class="n">not run</td><td class="n">0.94</td><td class="n">0.21</td><td class="n">0.11</td></tr>
+<tr><td>Gemma 4 31B</td><td class="n">0.158</td><td class="n">0.079</td><td class="n">0.99</td><td class="n">0.73</td><td class="n">0.44</td></tr>
+<tr><td>Qwen3.8-27B</td><td class="n">0.179</td><td class="n">0.083</td><td class="n">0.50</td><td class="n">0.84</td><td class="n">0.53</td></tr>
+<tr><td>Qwen3.6-35B-A3B</td><td class="n">0.208</td><td class="n">0.133</td><td class="n">0.83</td><td class="n">0.69</td><td class="n">0.43</td></tr>
+<tr><td>Muse-Glimmer-30B</td><td class="n">0.425</td><td class="n">0.150</td><td class="n">0.18</td><td class="n">0.52</td><td class="n">0.41</td></tr>
+<tr><td>Nemotron-3-nano 30B-A3B</td><td class="n">0.258</td><td class="n">0.133</td><td class="n">0.71</td><td class="n">0.36</td><td class="n">0.48</td></tr>
+<tr><td>Devstral-Small-2 24B</td><td class="n">0.537</td><td class="n">0.283</td><td class="n">0.37</td><td class="n">0.56</td><td class="n">0.66</td></tr>
+</tbody></table>
+</div>
+<div class="results-band tradeoffs">
+<article><p class="route-id">LONG PROMPTS</p><h3>Hosted held on</h3><p>Hosted models followed the 14,000-token instructions (hard-fail 6.7 to 10%). Every local model's hard-fail rate roughly doubled on the long prompt. In the earlier Panel B run, one local model dropped the requested output format in 62 of 120 answers; another needed a non-default thinking setting to write at all.</p></article>
+<article><p class="route-id">RULE-FOLLOWING</p><h3>Shapes are sticky</h3><p>Local models reproduced forbidden sentence shapes in 0.36 to 0.84 of outputs, against 0.08 to 0.22 for hosted models. The fixing pass cleans stock phrases and stated-feelings faults far more than sentence shapes.</p></article>
+<article><p class="route-id">PRIVACY</p><h3>Local stays local</h3><p>Local models keep every input on the machine; hosted models send prompts to a vendor. Only fabricated or generic text was sent in this study.</p></article>
+</div>
+<p class="status-note"><strong>Licences and terms (not legal advice).</strong> Gemma 4, the Qwen models and Devstral are Apache-2.0. Nemotron uses a vendor open-model licence with conditions (guardrails, indemnity). Muse-Glimmer is Apache-2.0 plus a vendor usage policy that is not intended for under-18 users and requires a deployer risk assessment, so it was used offline only. OpenAI's agreement gives the customer the output but bars using it to build competing models (internal, undistributed tuning is plausible under conditions). The Anthropic API terms on training with outputs were <b>not reviewed</b> (unverified).</p>
+<h3 class="table-title">Use X when …</h3>
+<div class="table-wrap">
+<table class="data-table decision">
+<caption class="sr-only">Decision table: when to use and when to avoid each option</caption>
+<thead><tr><th>Option</th><th>Use it when</th><th>Avoid it when</th></tr></thead>
+<tbody>
+<tr><td>Gemma 4 31B + fixing pass (local)</td><td>Inputs must stay on your machine, volume is high, and a score about 0.6 to 0.75 below the best hosted model is acceptable</td><td>You need top quality or exact long-prompt compliance</td></tr>
+<tr><td>Qwen3.8 / Qwen3.6 (local)</td><td>You want the fastest local throughput (about 600 to 940 per hour) on a shorter prompt</td><td>The instruction set is 14,000 tokens, or you need the best local quality</td></tr>
+<tr><td>Muse-Glimmer (local)</td><td>Offline-only use under its usage policy, with the shorter prompt plus the fixing pass (3.44, the best local shorter-prompt result in Panel A)</td><td>Long prompts (42.5% hard-fail), live or minor-facing use, or when speed matters (242 per hour)</td></tr>
+<tr><td>Devstral, Nemotron (local)</td><td>Rarely, for this task</td><td>Any quality-sensitive use</td></tr>
+<tr><td>Claude Haiku 5.5</td><td>The cheapest option that clears 3.5 to 3.7 and follows the long prompt ($5.30 per 1,000 at list)</td><td>You need the top score, or cannot send text to a vendor</td></tr>
+<tr><td>Claude Sonnet 5.5</td><td>The best single draft in the top group for the money (4.02, $73.20 per 1,000)</td><td>Haiku is enough</td></tr>
+<tr><td>Claude Opus 5.5 + fixing pass</td><td>You want the top cell (4.20) at $318.80 per 1,000</td><td>Sonnet + fixing pass (4.19) is statistically level at about half the cost</td></tr>
+<tr><td>Claude Fable 5.2</td><td>(Panel B only) the top Panel B score, 3.93, at $278.37 per 1,000</td><td>Its interval overlaps Sonnet's and Opus's in that panel</td></tr>
+<tr><td>LoRA / QLoRA tuning</td><td>You need a format the base model will not hold, and have hundreds of clean target examples</td><td>You want more quality: here it added none beyond prompt + fixing pass</td></tr>
+</tbody></table>
+</div>
+</section>
+
+<section class="section wrap" id="limits" style="padding-top:0">
+<div class="section-head">
+<p class="eyebrow">05 / LIMITS</p>
+<h2>What this does<br>not show.</h2>
+<p>These results choose a writer for one task, scored by one AI judge. They are not a general ranking of the models.</p>
+</div>
+<ul class="limit-list">
+<li>Scores come from an AI judge, not from people. The judge has not yet been anchored to human picks (50 blind human picks are pending), so treat the scores as screening evidence, not measured quality.</li>
+<li>The headline judge is a Claude model, from one of the compared families. Self-preference could not be separated, although the other judge's own head-to-head picks also favoured hosted over local.</li>
+<li>Panels are not comparable in level: the same Claude model moved by up to 0.36 between Panels A and B on identical cases. Compare within a panel, or use paired changes.</li>
+<li>Hosted arms had one draw per case and local arms two. Tuning rounds are single runs on 47 to 96 examples, and tuned models were not served live.</li>
+<li>Local wall power was not measured; the 150 W for the rest of the machine is an assumption. Electricity rates and hardware amortisation are the reader's parameters.</li>
+<li>Prices are as checked on 17 Nov 2026 (Anthropic) and 19 Nov 2026 (OpenAI). OpenAI cost rows are estimates; OpenAI models at the full prompt, the OpenAI judge, second hosted draws and best-of-N at the full prompt are not in this edition.</li>
+<li>All test cases are fabricated. Regenerating the outputs gives statistically similar, not identical, text.</li>
+</ul>
+<p class="status-note"><strong>Planned next:</strong> anchoring the judge to blind human picks, and running the OpenAI models at the full prompt.</p>
+</section>
+
+<section class="resources wrap" id="resources">
+<div>
+<p class="eyebrow">06 / RELATED WORK</p>
+<h2>The detail<br>behind this page.</h2>
+<p class="hero-deck">The aggregate tables and figures are public, so every number here can be checked. Test cases and model outputs are not published.</p>
+</div>
+<div class="resource-links">
+<a href="https://github.com/tayler-erbe/generative-writer-evaluation"><span>This study on GitHub · aggregate data and figures</span><b>↗</b></a>
+<a href="https://tayler-erbe.github.io/generative-writer-evaluation/brief/"><span>This page · Lab brief</span><b>↗</b></a>
+<a href="https://tayler-erbe.github.io/vllm-inference-throughput-evaluation/brief/"><span>Choosing an LLM for legislation extraction · Lab brief</span><b>↗</b></a>
+<a href="https://taylererbe.com/choosing-local-models-guide.html"><span>Choosing a local model · guide</span><b>↗</b></a>
+<a href="https://tayler-erbe.github.io/document-intelligence-lab/"><span>All Applied AI Lab studies</span><b>↗</b></a>
+</div>
+</section>
+
+<section class="section wrap" id="about" style="padding-top:20px">
+<div class="use-layout">
+<div><p class="eyebrow">ABOUT THIS WORK</p><h2 style="font-size:clamp(30px,3vw,42px)">Tayler Erbe</h2></div>
+<div>
+<p class="large-copy" style="font-size:20px">I'm a data and AI engineer. I choose models from measured quality, cost and speed on the task at hand, and I say plainly what the measurement cannot show.</p>
+<p>This evaluation was run in November 2026 on fabricated test cases. More studies are in the <a href="https://tayler-erbe.github.io/document-intelligence-lab/">Applied AI Lab</a>; my background is on <a href="https://taylererbe.com/">taylererbe.com</a>.</p>
+</div>
+</div>
+</section>
+</main>
+<footer class="wrap">
+<div><strong>Applied AI Lab</strong><p>Tayler Erbe · Last updated 20 November 2026 · Hosted models via API; local models on one RTX 5090.</p></div>
+<a href="https://tayler-erbe.github.io/document-intelligence-lab/">All Lab studies ↗</a>
+</footer>
+</body></html>

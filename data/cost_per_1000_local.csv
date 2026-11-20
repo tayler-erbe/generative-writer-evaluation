@@ -1,0 +1,25 @@
+model,prompt,track,gpu_seconds_per_output,outputs_per_hour,gpu_hours_per_1000,gpu_kwh_per_1000_card_only,usd_per_1000_at_0.20_per_kWh_incl_assumed_system,illustrative_amortisation_usd_per_1000
+Gemma 4 31B,full,single_draft,7.500,480.0,2.0833,1.0871,0.2799,0.4756
+Gemma 4 31B,full,draft_plus_fixing_pass,16.267,221.3,4.5186,2.3578,0.6071,1.0316
+Gemma 4 31B,shorter,single_draft,3.193,1127.6,0.8868,0.4627,0.1192,0.2025
+Gemma 4 31B,shorter,draft_plus_fixing_pass,7.855,458.3,2.1819,1.1385,0.2932,0.4981
+Qwen3.8-27B,full,single_draft,5.860,614.3,1.6278,0.7641,0.2016,0.3716
+Qwen3.8-27B,full,draft_plus_fixing_pass,12.026,299.3,3.3406,1.5681,0.4138,0.7627
+Qwen3.8-27B,shorter,single_draft,2.536,1419.3,0.7046,0.3307,0.0873,0.1609
+Qwen3.8-27B,shorter,draft_plus_fixing_pass,6.079,592.2,1.6885,0.7926,0.2092,0.3855
+Qwen3.6-35B-A3B,full,single_draft,3.870,930.2,1.0750,0.4454,0.1213,0.2454
+Qwen3.6-35B-A3B,full,draft_plus_fixing_pass,10.607,339.4,2.9463,1.2207,0.3325,0.6727
+Qwen3.6-35B-A3B,shorter,single_draft,2.293,1569.8,0.6370,0.2639,0.0719,0.1454
+Qwen3.6-35B-A3B,shorter,draft_plus_fixing_pass,7.382,487.7,2.0505,0.8495,0.2314,0.4681
+Muse-Glimmer-30B,full,single_draft,14.900,241.6,4.1389,2.3633,0.5968,0.9450
+Muse-Glimmer-30B,full,draft_plus_fixing_pass,40.152,89.7,11.1532,6.3685,1.6083,2.5464
+Muse-Glimmer-30B,shorter,single_draft,13.488,266.9,3.7468,2.1394,0.5403,0.8554
+Muse-Glimmer-30B,shorter,draft_plus_fixing_pass,38.583,93.3,10.7175,6.1197,1.5455,2.4469
+Nemotron-3-nano 30B-A3B,full,single_draft,2.590,1390.0,0.7194,0.3573,0.0931,0.1643
+Nemotron-3-nano 30B-A3B,full,draft_plus_fixing_pass,6.202,580.4,1.7229,0.8558,0.2228,0.3934
+Nemotron-3-nano 30B-A3B,shorter,single_draft,1.499,2400.8,0.4165,0.2069,0.0539,0.0951
+Nemotron-3-nano 30B-A3B,shorter,draft_plus_fixing_pass,3.953,910.7,1.0981,0.5454,0.1420,0.2507
+Devstral-Small-2 24B,full,single_draft,4.660,772.5,1.2944,0.7272,0.1843,0.2955
+Devstral-Small-2 24B,full,draft_plus_fixing_pass,10.356,347.6,2.8765,1.6160,0.4095,0.6567
+Devstral-Small-2 24B,shorter,single_draft,1.864,1931.3,0.5178,0.2909,0.0737,0.1182
+Devstral-Small-2 24B,shorter,draft_plus_fixing_pass,5.281,681.6,1.4670,0.8242,0.2088,0.3349
